@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 import glob
 #from moviepy.editor import VideoFileClip
 from collections import deque
-from sklearn.utils.linear_assignment_ import linear_assignment
+#from sklearn.utils.linear_assignment_ import linear_assignment
+#from scipy.optimize import linear_sum_assignment as linear_assignment
+from utils.linear_assignment_ import linear_assignment
 
 import helpers
 import detector
@@ -110,7 +112,7 @@ def pipeline(img):
     
     
     matched, unmatched_dets, unmatched_trks \
-    = assign_detections_to_trackers(x_box, z_box, iou_thrd = 0.3)  
+    = assign_detections_to_trackers(x_box, z_box, iou_thrd = 0.3)
     if debug:
          print('Detection: ', z_box)
          print('x_box: ', x_box)
