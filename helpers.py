@@ -125,6 +125,13 @@ def draw_box_label(img, id, bbox_cv2, timer=0, box_color=(0, 255, 255), show_lab
     # Draw the bounding box
     cv2.rectangle(img, (left, top), (right, bottom), box_color, 4)
 
+    centralX = round((left + right) / 2, 0)
+    centralY = round((top + bottom) / 2, 0)
+    print(f"centralX = {centralX}")
+    print(f"centralY = {centralY}")
+    # cv2.circle(img, (50, 50), 2, (0, 255, 0), 8)
+    cv2.circle(img, (int(centralX), int(centralY)), 2, (0, 255, 0), 8)
+
     if show_label:
         # Draw a filled box on top of the bounding box (as the background for the labels)
         cv2.rectangle(img, (left - 2, top - 45), (right + 2, top), box_color, -1, 1)
@@ -138,6 +145,7 @@ def draw_box_label(img, id, bbox_cv2, timer=0, box_color=(0, 255, 255), show_lab
         cv2.putText(img, text_timer, (left + 100, top - 5), font, font_size, font_color, 1, cv2.LINE_AA)
 
     return img
+
 
 def draw_box(img, bbox_cv2, box_color=(0, 255, 255)):
     # box_color= (0, 255, 255)

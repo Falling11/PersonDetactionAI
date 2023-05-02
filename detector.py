@@ -118,13 +118,17 @@ class PersonDetector(object):
                 plt.show()
 
             boxes = np.squeeze(boxes)
+            print('classes: ', classes)
             classes = np.squeeze(classes)
+            print('scores: ', scores)
             scores = np.squeeze(scores)
 
             cls = classes.tolist()
+            #print('classes:', cls)
 
             # The ID for car is 3
-            idx_vec = [i for i, v in enumerate(cls) if ((v == 1) and (scores[i] > 0.3))]
+            idx_vec = [i for i, v in enumerate(cls) if ((v == 1) and (scores[i] > 0.6))]
+            print('id_vec: ', idx_vec)
 
             if len(idx_vec) == 0:
                 print('no detection!')
