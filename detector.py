@@ -118,9 +118,9 @@ class PersonDetector(object):
                 plt.show()
 
             boxes = np.squeeze(boxes)
-            print('classes: ', classes)
+            #print('classes: ', classes)
             classes = np.squeeze(classes)
-            print('scores: ', scores)
+            #print('scores: ', scores)
             scores = np.squeeze(scores)
 
             cls = classes.tolist()
@@ -132,6 +132,8 @@ class PersonDetector(object):
 
             if len(idx_vec) == 0:
                 print('no detection!')
+                self.car_boxes.clear()
+                #return None
             else:
                 tmp_car_boxes = []
                 for idx in idx_vec:
@@ -143,7 +145,7 @@ class PersonDetector(object):
 
                     # if ((ratio < 0.8) and (box_h>20) and (box_w>20)):
                     tmp_car_boxes.append(box)
-                    print(box, ', confidence: ', scores[idx], 'ratio:', ratio)
+                    #print(box, ', confidence: ', scores[idx], 'ratio:', ratio)
                     '''   
                     else:
                         print('wrong ratio or wrong size, ', box, ', confidence: ', scores[idx], 'ratio:', ratio)

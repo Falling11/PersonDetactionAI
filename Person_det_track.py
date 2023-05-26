@@ -18,6 +18,9 @@ import detector
 import tracker
 import cv2
 
+from SelectedAreaClass import SelectedArea
+import StatisticWindow
+
 # Global variables to be used by funcitons of VideoFileClop
 frame_count = 0  # frame counter
 
@@ -194,15 +197,52 @@ def pipeline(img, time=0):
     return img
 
 
-refPt = [(0, 0), (0, 0)]
+firstPoint = (0, 0)
+secondPoint = (0, 0)
+selectedAreasList = []
+
+
+def SetFirstPoint(x, y):
+    global firstPoint
+    firstPoint = (x, y)
+
+
+def SetSecondPoint(x, y):
+    global secondPoint
+    secondPoint = (x, y)
+
+
+def AddArea():
+    rectPoints = [(0, 0), (0, 0)]
+    rectPoints[0] = firstPoint
+    rectPoints[1] = secondPoint
+    selectedAreasList.append(SelectedArea(rectPoints, timer()))
+
+
+def DeleteArea(x, y):
+    for selectedArea in selectedAreasList:
+        if selectedArea.areaPoints[0][0] <= x <= selectedArea.areaPoints[1][0] and selectedArea.areaPoints[0][
+            1] <= y <= selectedArea.areaPoints[1][1]:
+            selectedAreasList.remove(selectedArea)
 
 
 def mouse_clicked(event, x, y, flags, param):
-    global refPt
+    global firstPoint
+    global secondPoint
+
     if event == cv2.EVENT_LBUTTONDOWN:
-        refPt[0] = (x, y)
+        firstPoint = (x, y)
     elif event == cv2.EVENT_LBUTTONUP:
-        refPt[1] = (x, y)
+        rectPoints = [(0, 0), (0, 0)]
+        secondPoint = (x, y)
+        rectPoints[0] = firstPoint
+        rectPoints[1] = secondPoint
+        selectedAreasList.append(SelectedArea(rectPoints, timer()))
+    elif event == cv2.EVENT_RBUTTONDBLCLK:
+        for selectedArea in selectedAreasList:
+            if selectedArea.areaPoints[0][0] <= x <= selectedArea.areaPoints[1][0] and selectedArea.areaPoints[0][
+                1] <= y <= selectedArea.areaPoints[1][1]:
+                selectedAreasList.remove(selectedArea)
 
 
 if __name__ == "__main__":
@@ -219,7 +259,7 @@ if __name__ == "__main__":
             plt.show()
 
     else:  # test on a video file.
-        img_ = None
+        # img_ = None
 
         # start=time.time()
         # output = 'test_v7.mp4'
@@ -227,55 +267,127 @@ if __name__ == "__main__":
         # clip = clip1.fl_image(pipeline)
         # clip.write_videofile(output, audio=False)
         # end  = time.time()
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter('output.avi', fourcc, 8.0, (640, 480))
         temp = [np.array([215, 68, 475, 501])]
         noDetectionTime = 0
-        detectionTime = 0
+        detecqtionTime = 0
         counter = 0
-        cv2.namedWindow('frame')
-        cv2.setMouseCallback('frame', mouse_clicked)
+        # cv2.namedWindow('frame')
+        # cv2.setMouseCallback('frame', mouse_clicked)
+
+        personBoxCenterList = []
+        # inWorkBox = None
+        # a = test2.App(tkinter.Tk(), 'имя окна');
         while True:
+            personBoxCenterList.clear()
 
             ret, img = cap.read()
-
-            cv2.rectangle(img, refPt[0], refPt[1], (255, 0, 255),
-                          2)  # refPt[0]-верх. л. угол, refPt[1]- нижн. прав. угол
+            print('ptr list = ', selectedAreasList)
+            for selectedArea in selectedAreasList:
+                # print('selectedArea = ', selectedArea)
+                img = cv2.rectangle(img, selectedArea.areaPoints[0], selectedArea.areaPoints[1], (255, 0, 255),
+                                    2)  # refPt[0]-верх. л. угол, refPt[1]- нижн. прав. угол
 
             z_box = det.get_localization(img)  # measurement
             # print(z_box)
             # print(temp)
-            centralX = (z_box[0][1] + z_box[0][3]) / 2
-            centralY = (z_box[0][0] + z_box[0][2]) / 2
-            inWorkBox = None
+            for box in z_box:
+                centralX = (box[1] + box[3]) / 2
+                centralY = (box[0] + box[2]) / 2
+                centralPoint = (centralX, centralY)
+                personBoxCenterList.append(centralPoint)
 
-            if refPt[0][0] <= centralX <= refPt[1][0] and refPt[0][1] <= centralY <= refPt[1][1]:
-                inWorkBox = True
-            else:
-                inWorkBox = False
+            for selectedArea in selectedAreasList:
+                areaISActive = False
+                for personBoxCenter in personBoxCenterList:
+                    if selectedArea.areaPoints[0][0] <= personBoxCenter[0] <= selectedArea.areaPoints[1][0] and \
+                            selectedArea.areaPoints[0][1] <= personBoxCenter[1] <= selectedArea.areaPoints[1][1]:
+                        print('вы в зоне!')
+                        areaISActive = True
+                        break
 
-            res = z_box[0] != temp[0]
+                if areaISActive:
+                    selectedArea.activeTime = timer() - selectedArea.passiveTime - selectedArea.startTime
+                else:
+                    selectedArea.passiveTime = timer() - selectedArea.activeTime - selectedArea.startTime
+                print('активное время: ', selectedArea.activeTime, '\tпассивное время: ', selectedArea.passiveTime)
 
-            if res.any() and inWorkBox:
-                detectionTime = timer() - noDetectionTime
-                counter = 0
-            else:
-                if counter < 5:
-                    detectionTime = timer() - noDetectionTime
-                    counter += 1
-                noDetectionTime = timer() - detectionTime
+            # if refPt[0][0] <= centralX <= refPt[1][0] and refPt[0][1] <= centralY <= refPt[1][1]:
+            #     inWorkBox = True
+            # else:
+            #     inWorkBox = False
 
-            temp = z_box
+            # res = z_box[0] != temp[0]
+            #
+            # if res.any() and inWorkBox:
+            #     detectionTime = timer() - noDetectionTime
+            #     counter = 0
+            # else:
+            #     if counter < 5:
+            #         detectionTime = timer() - noDetectionTime
+            #         counter += 1
+            #     noDetectionTime = timer() - detectionTime
+            #
+            # temp = z_box
 
-            np.asarray(img)
-            new_img = pipeline(img, round(detectionTime, 2))
-            out.write(new_img)
-            cv2.imshow("frame", new_img)
+            # np.asarray(img)
+            # new_img = pipeline(img, round(detectionTime, 2))
+            for box in z_box:
+                img = helpers.draw_box_label(img, 1, box, round(timer(), 2))
+
+            cv2.imshow("frame", img)
+
+            if cv2.waitKey(1) & 0xFF == ord('s'):
+                StatisticWindow.func(selectedAreasList)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
         cap.release()
         cv2.destroyAllWindows()
+        # a.window.mainloop()
+
         # print(round(end-start, 2), 'Seconds to finish')
+
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+det = detector.PersonDetector()
+personBoxCenterList = []
+
+
+def myfunc():
+    ret, img = cap.read()
+    print('ptr list = ', selectedAreasList)
+
+    z_box = det.get_localization(img)  # measurement
+
+    personBoxCenterList.clear()
+    for box in z_box:
+        centralX = (box[1] + box[3]) / 2
+        centralY = (box[0] + box[2]) / 2
+        centralPoint = (centralX, centralY)
+        personBoxCenterList.append(centralPoint)
+
+    for selectedArea in selectedAreasList:
+        areaIsActive = False
+        for personBoxCenter in personBoxCenterList:
+            if selectedArea.areaPoints[0][0] <= personBoxCenter[0] <= selectedArea.areaPoints[1][0] and \
+                    selectedArea.areaPoints[0][1] <= personBoxCenter[1] <= selectedArea.areaPoints[1][1]:
+                print('вы в зоне!')
+                areaIsActive = True
+                break
+
+        if areaIsActive:
+            selectedArea.activeTime = timer() - selectedArea.passiveTime - selectedArea.startTime
+        else:
+            selectedArea.passiveTime = timer() - selectedArea.activeTime - selectedArea.startTime
+        print('активное время: ', selectedArea.activeTime, '\tпассивное время: ', selectedArea.passiveTime)
+
+    for box in z_box:
+        img = helpers.draw_box_label(img, 1, box, round(timer(), 2))
+
+    for selectedArea in selectedAreasList:
+        img = cv2.rectangle(img, selectedArea.areaPoints[0], selectedArea.areaPoints[1], (255, 0, 255), 2)
+
+    return ret, img

@@ -127,8 +127,8 @@ def draw_box_label(img, id, bbox_cv2, timer=0, box_color=(0, 255, 255), show_lab
 
     centralX = round((left + right) / 2, 0)
     centralY = round((top + bottom) / 2, 0)
-    print(f"centralX = {centralX}")
-    print(f"centralY = {centralY}")
+    #print(f"centralX = {centralX}")
+    #print(f"centralY = {centralY}")
     # cv2.circle(img, (50, 50), 2, (0, 255, 0), 8)
     cv2.circle(img, (int(centralX), int(centralY)), 2, (0, 255, 0), 8)
 
