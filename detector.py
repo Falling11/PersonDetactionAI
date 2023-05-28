@@ -133,7 +133,7 @@ class PersonDetector(object):
             if len(idx_vec) == 0:
                 print('no detection!')
                 self.car_boxes.clear()
-                #return None
+
             else:
                 tmp_car_boxes = []
                 for idx in idx_vec:

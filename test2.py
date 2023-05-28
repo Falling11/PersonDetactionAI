@@ -1,7 +1,7 @@
 import cv2
 import tkinter
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, simpledialog
 from PIL import Image, ImageTk
 
 import Person_det_track
@@ -32,11 +32,11 @@ class App:
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
 
-        self.btn4 = Button(self.window, width=10, text="Click")
-        self.btn4.bind("<Button-1>", self.whell_click)
-        self.btn4.pack(side=TOP, padx=5, pady=5, anchor=W)
-
         columns = ("id", "activeTime", "passiveTime")
+
+        self.btn4 = Button(self.window, width=10, text="Свернуть")
+        self.btn4.pack(side=TOP, padx=5, pady=5, anchor=W)
+        self.btn4.bind("<Button-1>", self.whell_click)
 
         self.tree = ttk.Treeview(columns=columns, show="headings")
         self.tree.pack(fill=BOTH, expand=1, padx=5)
@@ -45,15 +45,18 @@ class App:
         self.tree.heading("activeTime", text="Активное время")
         self.tree.heading("passiveTime", text="Пассивное время")
 
-        self.btn = Button(self.window, width=10, text="Click")
-        self.btn.bind("<Button-1>", self.reload_table)
-        self.btn.pack(side=LEFT, padx=5, pady=5, anchor=W)
+        self.reloadBtn = Button(self.window, width=10, text="Обновить", command=self.reload_table)
+        self.reloadBtn.pack(side=LEFT, padx=5, pady=5, anchor=W)
+        #self.reloadBtn.bind("<Button-1>", self.reload_table)
 
-        self.btn2 = Button(self.window, width=10, text="Click too")
+        self.btn2 = Button(self.window, width=10, text="Сменить id", command=self.change_id)
         self.btn2.pack(side=LEFT, padx=5, pady=5, anchor=W)
+        #self.btn2.bind("<Button-1>", self.change_id)
 
         self.btn3 = Button(self.window, width=10, text="Click too___")
         self.btn3.pack(side=TOP, padx=5, pady=5, anchor=W)
+
+
 
     def update(self, img=None):
         # Get a frame from the video source
@@ -64,10 +67,6 @@ class App:
             self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
             self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
         self.window.after(self.delay, self.update)
-        # if img is not None:
-        #     self.photo = ImageTk.PhotoImage(image=Image.fromarray(img))
-        #     self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
-        # self.window.after(self.delay, self.update)
 
     def SetFirstPoint(self, event):
         Person_det_track.SetFirstPoint(event.x, event.y)
@@ -75,30 +74,45 @@ class App:
     def SetSecondPoint(self, event):
         Person_det_track.SetSecondPoint(event.x, event.y)
         Person_det_track.AddArea()
+        self.reload_table()
 
     def DeleteArea(self, event):
         Person_det_track.DeleteArea(event.x, event.y)
+        self.reload_table()
 
     def whell_click(self, event):
         if self.tree.winfo_viewable():
             self.tree.pack_forget()
-            self.btn.pack_forget()
+            self.reloadBtn.pack_forget()
             self.btn2.pack_forget()
             self.btn3.pack_forget()
+            self.btn4.configure(text="Развернуть")
         else:
-            self.tree.delete(*self.tree.get_children())
-            for area in Person_det_track.selectedAreasList:
-                self.tree.insert("", END, values=(1, area.activeTime, area.passiveTime))
+            self.reload_table()
 
             self.tree.pack(fill=BOTH, expand=1, anchor=N, padx=5)
-            self.btn.pack(side=LEFT, padx=5, pady=5, anchor=W)
+            self.reloadBtn.pack(side=LEFT, padx=5, pady=5, anchor=W)
             self.btn2.pack(side=LEFT, padx=5, pady=5, anchor=W)
             self.btn3.pack(side=TOP, padx=5, pady=5, anchor=W)
+            self.btn4.configure(text="Свернуть")
 
-    def reload_table(self, event):
+    def reload_table(self):
         self.tree.delete(*self.tree.get_children())
         for area in Person_det_track.selectedAreasList:
-            self.tree.insert("", END, values=(1, area.activeTime, area.passiveTime))
+            self.tree.insert("", END, values=(area.id, area.activeTime, area.passiveTime))
+
+    def change_id(self):
+        for selected_item in self.tree.selection():
+
+            # the input dialog
+            USER_INP = simpledialog.askstring("Смена id", "Укажите новый id:", parent=self.window)
+            if USER_INP is None or not USER_INP:
+                return
+
+            Person_det_track.ChangeAreaID(self.tree.index(selected_item), USER_INP)
+            self.reload_table()
+
+
 
 
 
@@ -130,10 +144,4 @@ if __name__ == "__main__":
     a = App(tkinter.Tk(), 'имя окна')
     a.update()
     a.window.mainloop()
-# i=0
-# while i<1000:
-#     print(1)
-#     a.update()
-#     i+=1
-#
-# a.window.mainloop()
+

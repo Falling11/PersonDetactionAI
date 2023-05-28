@@ -18,31 +18,31 @@ class Box:
 
 
 def overlap(x1, w1, x2, w2):
-    l1 = x1 - w1 / 2.;
-    l2 = x2 - w2 / 2.;
+    l1 = x1 - w1 / 2.
+    l2 = x2 - w2 / 2.
     left = max(l1, l2)
-    r1 = x1 + w1 / 2.;
-    r2 = x2 + w2 / 2.;
+    r1 = x1 + w1 / 2.
+    r2 = x2 + w2 / 2.
     right = min(r1, r2)
-    return right - left;
+    return right - left
 
 
 def box_intersection(a, b):
-    w = overlap(a.x, a.w, b.x, b.w);
-    h = overlap(a.y, a.h, b.y, b.h);
-    if w < 0 or h < 0: return 0;
-    area = w * h;
-    return area;
+    w = overlap(a.x, a.w, b.x, b.w)
+    h = overlap(a.y, a.h, b.y, b.h)
+    if w < 0 or h < 0: return 0
+    area = w * h
+    return area
 
 
 def box_union(a, b):
-    i = box_intersection(a, b);
-    u = a.w * a.h + b.w * b.h - i;
-    return u;
+    i = box_intersection(a, b)
+    u = a.w * a.h + b.w * b.h - i
+    return u
 
 
 def box_iou(a, b):
-    return box_intersection(a, b) / box_union(a, b);
+    return box_intersection(a, b) / box_union(a, b)
 
 
 def box_iou2(a, b):
@@ -147,14 +147,20 @@ def draw_box_label(img, id, bbox_cv2, timer=0, box_color=(0, 255, 255), show_lab
     return img
 
 
-def draw_box(img, bbox_cv2, box_color=(0, 255, 255)):
+def draw_selectedArea_box(img, bbox_cv2, box_color=(0, 255, 255), id=1, show_label=True):
     # box_color= (0, 255, 255)
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_size = 0.7
-    font_color = (0, 0, 0)
-    left, top, right, bottom = bbox_cv2[1], bbox_cv2[0], bbox_cv2[3], bbox_cv2[2]
+    font_color = (180, 100, 200)
+    left, top, right, bottom = bbox_cv2[0][0], bbox_cv2[0][1], bbox_cv2[1][0], bbox_cv2[1][1]
 
-    # Draw the bounding box
-    cv2.rectangle(img, (left, top), (right, bottom), box_color, 4)
+    if show_label:
+        # Draw the bounding box
+        cv2.rectangle(img, (left, top), (right, bottom), box_color, 4)
+
+        # Output the labels that show the x and y coordinates of the bounding box center.
+        text_x = 'id=' + str(id)
+        cv2.putText(img, text_x, (left + 5, top + 20), font, font_size, font_color, 1, cv2.LINE_AA)
+
 
     return img

@@ -225,6 +225,8 @@ def DeleteArea(x, y):
             1] <= y <= selectedArea.areaPoints[1][1]:
             selectedAreasList.remove(selectedArea)
 
+def ChangeAreaID(index, newId):
+    selectedAreasList[index].id = newId
 
 def mouse_clicked(event, x, y, flags, param):
     global firstPoint
@@ -358,7 +360,7 @@ personBoxCenterList = []
 
 def myfunc():
     ret, img = cap.read()
-    print('ptr list = ', selectedAreasList)
+    #print('ptr list = ', selectedAreasList)
 
     z_box = det.get_localization(img)  # measurement
 
@@ -368,6 +370,12 @@ def myfunc():
         centralY = (box[0] + box[2]) / 2
         centralPoint = (centralX, centralY)
         personBoxCenterList.append(centralPoint)
+
+        firstPoint = (box[1], box[0])
+        secondPoint = (box[3], box[2])
+
+        img = cv2.rectangle(img, firstPoint, secondPoint, (0, 255, 255), 1)
+        img = cv2.circle(img, (int(centralX), int(centralY)), 2, (0, 255, 0), 8)
 
     for selectedArea in selectedAreasList:
         areaIsActive = False
@@ -382,12 +390,9 @@ def myfunc():
             selectedArea.activeTime = timer() - selectedArea.passiveTime - selectedArea.startTime
         else:
             selectedArea.passiveTime = timer() - selectedArea.activeTime - selectedArea.startTime
-        print('активное время: ', selectedArea.activeTime, '\tпассивное время: ', selectedArea.passiveTime)
+        #print('активное время: ', selectedArea.activeTime, '\tпассивное время: ', selectedArea.passiveTime)
 
-    for box in z_box:
-        img = helpers.draw_box_label(img, 1, box, round(timer(), 2))
-
-    for selectedArea in selectedAreasList:
-        img = cv2.rectangle(img, selectedArea.areaPoints[0], selectedArea.areaPoints[1], (255, 0, 255), 2)
+        # img = cv2.rectangle(img, selectedArea.areaPoints[0], selectedArea.areaPoints[1], (255, 0, 255), 2)
+        img = helpers.draw_selectedArea_box(img, selectedArea.areaPoints, (255, 0, 255), selectedArea.id)
 
     return ret, img
